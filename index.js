@@ -15,7 +15,7 @@ app.listen(port, () => {
 	console.log(`App running on port ${port}`)
 })
 
-mongoose.connect("").then(()=> console.log("success")).catch(()=>console.log("failed"))
+mongoose.connect(process.env.MONGODB_URL).then(()=> console.log("success")).catch((v)=>console.error(v))
 
 app.get('api/users/:identityNumber', async (req,res) => {
 	try {
