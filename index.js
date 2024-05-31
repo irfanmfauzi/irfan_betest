@@ -15,7 +15,7 @@ app.listen(port, () => {
 	console.log(`App running on port ${port}`)
 })
 
-mongoose.connect("mongodb+srv://irfanmf96:2vuqzVHS15GGt6gL@dbirfanbetest.bdtukj1.mongodb.net/db_irfan_betest?retryWrites=true&w=majority&appName=dbIrfanbetest").then(()=> console.log("success")).catch(()=>console.log("failed"))
+mongoose.connect("").then(()=> console.log("success")).catch(()=>console.log("failed"))
 
 app.get('api/users/:identityNumber', async (req,res) => {
 	try {
