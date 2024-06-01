@@ -3,6 +3,7 @@ const { default: mongoose } = require('mongoose')
 const redis = require('redis')
 
 const User = require('./model/user.js')
+const jwt = require('jsonwebtoken')
 
 const port = 3000
 const redisPOrt = 6379
@@ -17,7 +18,32 @@ app.listen(port, () => {
 
 mongoose.connect(process.env.MONGODB_URL).then(()=> console.log("success")).catch((v)=>console.error(v))
 
-app.get('api/users/:identityNumber', async (req,res) => {
+const verifyToken = (req,res,next) => {
+	try {
+		const authHeader = req.headers['authorization'];
+		if (authHeader && authHeader.startsWith('Bearer ')) {
+			const token = authHeader.split(' ')[1];
+			jwt.verify(token,"mysecret")
+			next();
+		} else {
+			res.status(401).json({ message: 'Unauthorized: No token provided or invalid token format' });
+		}
+	} catch (error) {
+			res.status(401).json({ message: 'Unauthorized: No token provided or invalid token format' });
+	}
+}
+
+
+app.get('/api/token', (req,res) => {
+	try {
+		const token = jwt.sign("user","mysecret")
+		res.json({token:token})
+	} catch (error) {
+		res.json({message:error.message}).status(500)
+	}
+})
+
+app.get('/api/users/:identityNumber', async (req,res) => {
 	try {
 		const {identityNumber} = req.params()
 		client.get(identityNumber, async (err,userData) => {
@@ -43,7 +69,7 @@ app.get('api/users/:identityNumber', async (req,res) => {
 })
 
 
-app.post('/api/users', async (req,res) => {
+app.post('/api/users', verifyToken, async (req,res) => {
 	try {
 		const user = await User.create(req.body)
 		res.json(user).status(200)
@@ -53,7 +79,7 @@ app.post('/api/users', async (req,res) => {
 	}
 })
 
-app.put('api/users/:identityNumber', async (req,res) => {
+app.put('/api/users/:identityNumber', async (req,res) => {
 	try {
 		const {identityNumber} = req.params()
 		const updatedUser = await User.findOneAndUpdate(
@@ -69,7 +95,7 @@ app.put('api/users/:identityNumber', async (req,res) => {
 
 })
 
-app.delete('api/users/:identityNumber', async (req,res) => {
+app.delete('/api/users/:identityNumber', async (req,res) => {
 	const {identityNumber} = req.params()
 	const deletedUser = await User.findOneAndDelete({ identityNumber: identityNumber });
 
